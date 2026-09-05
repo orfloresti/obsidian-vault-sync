@@ -8,6 +8,7 @@
 # Uso:
 #   obsidian pull   - trae los últimos cambios del remoto
 #   obsidian push   - add + commit (mensaje automático) + pull + push
+#   obsidian sync   - pull + push, en un solo comando
 
 obsidian() {
     if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
@@ -27,8 +28,12 @@ obsidian() {
         push)
             _obsidian_push
             ;;
+        sync)
+            git -C "$OBSIDIAN_VAULT_PATH" pull || return 1
+            _obsidian_push
+            ;;
         *)
-            echo "Uso: obsidian pull | obsidian push" >&2
+            echo "Uso: obsidian pull | obsidian push | obsidian sync" >&2
             return 1
             ;;
     esac

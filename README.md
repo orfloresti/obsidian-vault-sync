@@ -10,6 +10,7 @@ terminal, sin necesidad de navegar a la carpeta del vault.
   automático que lista los archivos modificados), hace `pull` para evitar que
   el push sea rechazado si otro dispositivo subió cambios primero, y luego
   hace `push`.
+- `obsidian sync` — corre `pull` y luego `push` en un solo comando.
 
 Si `obsidian push` encuentra un conflicto al hacer pull, se detiene y avisa
 para resolverlo a mano en la carpeta del vault — no intenta resolverlo solo.
