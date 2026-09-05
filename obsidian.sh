@@ -6,7 +6,7 @@
 # Requiere: export OBSIDIAN_VAULT_PATH=/ruta/a/tu/vault  (antes de sourcear este archivo)
 #
 # Uso:
-#   obsidian pull   - trae los últimos cambios del remoto
+#   obsidian pull   - trae los últimos cambios del remoto (guarda cambios locales sin commitear con git stash y los reaplica después)
 #   obsidian push   - add + commit (mensaje automático) + pull + push
 #   obsidian sync   - pull + push, en un solo comando
 
@@ -23,13 +23,13 @@ obsidian() {
 
     case "$1" in
         pull)
-            git -C "$OBSIDIAN_VAULT_PATH" pull
+            _obsidian_pull
             ;;
         push)
             _obsidian_push
             ;;
         sync)
-            git -C "$OBSIDIAN_VAULT_PATH" pull || return 1
+            _obsidian_pull || return 1
             _obsidian_push
             ;;
         *)
@@ -37,6 +37,37 @@ obsidian() {
             return 1
             ;;
     esac
+}
+
+# Pull explícito con --no-rebase para no depender de la configuración de git
+# del dispositivo (algunos git piden "reconcile divergent branches" si
+# pull.rebase/pull.ff no están configurados). Si hay cambios locales sin
+# commitear, los guarda con git stash antes y los reaplica después, para que
+# un pull nunca sea bloqueado ni pierda trabajo.
+_obsidian_pull() {
+    local vault="$OBSIDIAN_VAULT_PATH"
+    local stashed=0
+
+    if ! git -C "$vault" diff --quiet || ! git -C "$vault" diff --cached --quiet; then
+        echo "obsidian: guardando cambios locales sin commitear antes del pull (git stash)..."
+        git -C "$vault" stash push -u -m "obsidian pull: cambios sin commitear" || return 1
+        stashed=1
+    fi
+
+    if ! git -C "$vault" pull --no-edit --no-rebase; then
+        echo "obsidian: conflicto al hacer pull." >&2
+        if [ "$stashed" -eq 1 ]; then
+            echo "obsidian: tus cambios locales quedaron guardados con git stash. Resuelve el conflicto en $vault y corre 'git stash pop' ahí." >&2
+        fi
+        return 1
+    fi
+
+    if [ "$stashed" -eq 1 ]; then
+        if ! git -C "$vault" stash pop; then
+            echo "obsidian: conflicto al reaplicar tus cambios locales (git stash pop). Resuélvelo manualmente en $vault." >&2
+            return 1
+        fi
+    fi
 }
 
 _obsidian_push() {
@@ -61,7 +92,7 @@ _obsidian_push() {
     fi
 
     echo "obsidian: sincronizando con el remoto..."
-    if ! git -C "$vault" pull --no-edit; then
+    if ! git -C "$vault" pull --no-edit --no-rebase; then
         echo "obsidian: conflicto al hacer pull. Resuélvelo manualmente en $vault y vuelve a correr 'obsidian push'." >&2
         return 1
     fi
