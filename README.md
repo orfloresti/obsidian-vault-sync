@@ -15,6 +15,11 @@ terminal, sin necesidad de navegar a la carpeta del vault.
 Si `obsidian push` encuentra un conflicto al hacer pull, se detiene y avisa
 para resolverlo a mano en la carpeta del vault — no intenta resolverlo solo.
 
+**Recomendación:** antes de empezar a editar notas en un dispositivo, corre
+`obsidian sync` primero. Así arrancas con lo último del remoto y bajas el
+riesgo de que tus ediciones choquen (conflicto de merge) con cambios hechos
+en otro dispositivo mientras tanto.
+
 ## Instalación (en cada dispositivo)
 
 1. Clona este repo en cualquier ubicación:
