@@ -1,78 +1,78 @@
-# ovs.sh
+# vsync.sh
 #
-# `ovs` command to sync an Obsidian vault via git from any terminal,
+# `vsync` command to sync an Obsidian vault via git from any terminal,
 # without having to cd into the vault folder.
 #
 # Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault  (before sourcing this file)
 #
-# `ovs update` figures out where this file itself lives (wherever you
+# `vsync update` figures out where this file itself lives (wherever you
 # cloned obsidian-vault-sync) automatically, no config needed. Only set
-# OVS_SYNC_PATH if that detection doesn't work for your setup.
+# VSYNC_PATH if that detection doesn't work for your setup.
 #
 # Usage:
-#   ovs              - pull, then push, in a single command (the common case)
-#   ovs pull         - pull the latest changes from the remote (stashes any
+#   vsync            - pull, then push, in a single command (the common case)
+#   vsync pull       - pull the latest changes from the remote (stashes any
 #                       uncommitted local changes first and reapplies them after)
-#   ovs push         - add + commit (auto-generated message) + pull + push
-#   ovs update       - update this tool itself (pulls obsidian-vault-sync)
-#   ovs help         - show this usage message
+#   vsync push       - add + commit (auto-generated message) + pull + push
+#   vsync update     - update this tool itself (pulls obsidian-vault-sync)
+#   vsync help       - show this usage message
 
-ovs() {
+vsync() {
     case "$1" in
         help | -h | --help)
-            _ovs_help
+            _vsync_help
             return 0
             ;;
         update)
-            _ovs_update
+            _vsync_update
             return $?
             ;;
     esac
 
     if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
-        echo "ovs: OBSIDIAN_VAULT_PATH is not set. Add 'export OBSIDIAN_VAULT_PATH=/path/to/your/vault' to your .bashrc/.zshrc" >&2
+        echo "vsync: OBSIDIAN_VAULT_PATH is not set. Add 'export OBSIDIAN_VAULT_PATH=/path/to/your/vault' to your .bashrc/.zshrc" >&2
         return 1
     fi
 
     if [ ! -d "$OBSIDIAN_VAULT_PATH/.git" ]; then
-        echo "ovs: '$OBSIDIAN_VAULT_PATH' is not a git repository" >&2
+        echo "vsync: '$OBSIDIAN_VAULT_PATH' is not a git repository" >&2
         return 1
     fi
 
     case "$1" in
         "")
-            _ovs_pull || return 1
-            _ovs_push
+            _vsync_pull || return 1
+            _vsync_push
             ;;
         pull)
-            _ovs_pull
+            _vsync_pull
             ;;
         push)
-            _ovs_push
+            _vsync_push
             ;;
         *)
-            _ovs_help >&2
+            _vsync_help >&2
             return 1
             ;;
     esac
 }
 
-# Detect the directory this file was sourced from, so `ovs update` works
+# Detect the directory this file was sourced from, so `vsync update` works
 # without any extra configuration. BASH_SOURCE covers bash; zsh doesn't set
 # $0 to the sourced file, so it needs its own idiom.
 if [ -n "${BASH_SOURCE:-}" ]; then
-    _ovs_self="${BASH_SOURCE[0]}"
+    _vsync_self="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
-    _ovs_self="${(%):-%N}"
+    _vsync_self="${(%):-%N}"
 fi
-if [ -n "${_ovs_self:-}" ]; then
-    OVS_SYNC_DIR="$(cd "$(dirname "$_ovs_self")" && pwd)"
+if [ -n "${_vsync_self:-}" ]; then
+    VSYNC_DIR="$(cd "$(dirname "$_vsync_self")" && pwd)"
 fi
-unset _ovs_self
+unset _vsync_self
 
-_ovs_help() {
+_vsync_help() {
     cat <<'EOF'
-Usage: ovs [command]
+Usage: vsync [command]
 
 Commands:
   (none)  Pull, then push, in a single command — the common case
@@ -83,26 +83,26 @@ Commands:
   help    Show this message
 
 Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault
-'ovs update' auto-detects where obsidian-vault-sync is cloned; set
-OVS_SYNC_PATH only if that detection fails for your setup.
+'vsync update' auto-detects where obsidian-vault-sync is cloned; set
+VSYNC_PATH only if that detection fails for your setup.
 EOF
 }
 
-_ovs_update() {
-    local sync_dir="${OVS_SYNC_PATH:-${OVS_SYNC_DIR:-$HOME/.obsidian-vault-sync}}"
+_vsync_update() {
+    local sync_dir="${VSYNC_PATH:-${VSYNC_DIR:-$HOME/.obsidian-vault-sync}}"
 
     if [ ! -d "$sync_dir/.git" ]; then
-        echo "ovs: '$sync_dir' is not a git repository. Set OVS_SYNC_PATH to where you cloned obsidian-vault-sync." >&2
+        echo "vsync: '$sync_dir' is not a git repository. Set VSYNC_PATH to where you cloned obsidian-vault-sync." >&2
         return 1
     fi
 
-    echo "ovs: updating obsidian-vault-sync..."
+    echo "vsync: updating obsidian-vault-sync..."
     if ! git -C "$sync_dir" pull --no-edit --no-rebase; then
-        echo "ovs: conflict while updating. Resolve it manually in $sync_dir." >&2
+        echo "vsync: conflict while updating. Resolve it manually in $sync_dir." >&2
         return 1
     fi
 
-    echo "ovs: done. Open a new terminal (or re-source ovs.sh) to load the update."
+    echo "vsync: done. Open a new terminal (or re-source vsync.sh) to load the update."
 }
 
 # Explicit --no-rebase so this doesn't depend on the device's git config
@@ -110,33 +110,33 @@ _ovs_update() {
 # pull.ff aren't configured). Any uncommitted local changes are stashed
 # before pulling and reapplied after, so a pull never gets blocked or
 # silently loses work.
-_ovs_pull() {
+_vsync_pull() {
     local vault="$OBSIDIAN_VAULT_PATH"
     local stashed=0
 
     if ! git -C "$vault" diff --quiet || ! git -C "$vault" diff --cached --quiet; then
-        echo "ovs: stashing uncommitted local changes before pulling..."
-        git -C "$vault" stash push -u -m "ovs pull: uncommitted changes" || return 1
+        echo "vsync: stashing uncommitted local changes before pulling..."
+        git -C "$vault" stash push -u -m "vsync pull: uncommitted changes" || return 1
         stashed=1
     fi
 
     if ! git -C "$vault" pull --no-edit --no-rebase; then
-        echo "ovs: conflict while pulling." >&2
+        echo "vsync: conflict while pulling." >&2
         if [ "$stashed" -eq 1 ]; then
-            echo "ovs: your local changes are safe in a git stash. Resolve the conflict in $vault, then run 'git stash pop' there." >&2
+            echo "vsync: your local changes are safe in a git stash. Resolve the conflict in $vault, then run 'git stash pop' there." >&2
         fi
         return 1
     fi
 
     if [ "$stashed" -eq 1 ]; then
         if ! git -C "$vault" stash pop; then
-            echo "ovs: conflict while reapplying your local changes (git stash pop). Resolve it manually in $vault." >&2
+            echo "vsync: conflict while reapplying your local changes (git stash pop). Resolve it manually in $vault." >&2
             return 1
         fi
     fi
 }
 
-_ovs_push() {
+_vsync_push() {
     local vault="$OBSIDIAN_VAULT_PATH"
 
     git -C "$vault" add -A
@@ -154,12 +154,12 @@ _ovs_push() {
 
         git -C "$vault" commit -m "sync: $summary" || return 1
     else
-        echo "ovs: no local changes to commit"
+        echo "vsync: no local changes to commit"
     fi
 
-    echo "ovs: syncing with the remote..."
+    echo "vsync: syncing with the remote..."
     if ! git -C "$vault" pull --no-edit --no-rebase; then
-        echo "ovs: conflict while pulling. Resolve it manually in $vault and run 'ovs push' again." >&2
+        echo "vsync: conflict while pulling. Resolve it manually in $vault and run 'vsync push' again." >&2
         return 1
     fi
 
