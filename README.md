@@ -46,22 +46,17 @@ en otro dispositivo mientras tanto.
    make install
    ```
 
-   Te va a preguntar la ruta del repo (default: el directorio actual) y qué
-   archivo de shell actualizar (`~/.bashrc` por default, o `~/.zshrc` si tu
-   shell es zsh). Agrega un bloque delimitado por marcadores a ese archivo:
-   la ruta del repo a `PATH` y el `source` de `vsync.sh`. Correrlo de nuevo
-   reemplaza el bloque en vez de duplicarlo.
+   La ruta del propio repo la detecta sola (de dónde está corriendo el
+   script), no hace falta escribirla. Te va a preguntar la ruta de tu vault
+   de Obsidian y qué archivo de shell actualizar (`~/.bashrc` por default, o
+   `~/.zshrc` si tu shell es zsh). Agrega un bloque delimitado por marcadores
+   a ese archivo con `OBSIDIAN_VAULT_PATH`, la ruta del repo a `PATH`, y el
+   `source` de `vsync.sh`. Correrlo de nuevo reemplaza el bloque en vez de
+   duplicarlo.
 
    `vsync` es una función de shell, no un binario — lo que realmente lo hace
    disponible es la línea de `source`, no el `PATH` (ese se agrega por si
    más adelante agregas otros scripts sueltos a este repo).
-
-   `make install` **no** configura `OBSIDIAN_VAULT_PATH` — agrégalo tú a mano
-   en el mismo archivo, apuntando a tu vault en ese dispositivo:
-
-   ```bash
-   export OBSIDIAN_VAULT_PATH="$HOME/obsidian-vault"
-   ```
 
 3. Abre una terminal nueva (o corre `source ~/.bashrc`) y prueba:
 
