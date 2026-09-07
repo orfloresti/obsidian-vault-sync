@@ -12,10 +12,11 @@ terminal, sin necesidad de navegar a la carpeta del vault.
   hace `push`.
 - `obsidian sync` — corre `pull` y luego `push` en un solo comando.
 - `obsidian update` — actualiza esta herramienta (hace `pull` del propio
-  repo `obsidian-vault-sync`). Por default asume que está clonada en
-  `~/.obsidian-vault-sync`; si la clonaste en otro lado, define
-  `OBSIDIAN_SYNC_PATH` apuntando ahí. Después de actualizar, abre una
-  terminal nueva (o vuelve a sourcear `obsidian.sh`) para que tome el cambio.
+  repo `obsidian-vault-sync`). Detecta solo desde dónde sourceaste
+  `obsidian.sh`, sin importar dónde lo hayas clonado — no necesitas
+  configurar nada. Solo define `OBSIDIAN_SYNC_PATH` si esa detección
+  fallara en tu caso. Después de actualizar, abre una terminal nueva (o
+  vuelve a sourcear `obsidian.sh`) para que tome el cambio.
 - `obsidian help` (o `-h` / `--help`) — muestra la ayuda de uso.
 
 Si `obsidian push` encuentra un conflicto al hacer pull, se detiene y avisa

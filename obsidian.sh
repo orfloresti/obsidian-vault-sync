@@ -5,8 +5,9 @@
 #
 # Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault  (before sourcing this file)
 #
-# Optional: export OBSIDIAN_SYNC_PATH=/path/to/obsidian-vault-sync
-#           (defaults to ~/.obsidian-vault-sync, used by `obsidian update`)
+# `obsidian update` figures out where this file itself lives (wherever you
+# cloned obsidian-vault-sync) automatically, no config needed. Only set
+# OBSIDIAN_SYNC_PATH if that detection doesn't work for your setup.
 #
 # Usage:
 #   obsidian pull    - pull the latest changes from the remote (stashes any
@@ -56,6 +57,19 @@ obsidian() {
     esac
 }
 
+# Detect the directory this file was sourced from, so `obsidian update`
+# works without any extra configuration. BASH_SOURCE covers bash; zsh
+# doesn't set $0 to the sourced file, so it needs its own idiom.
+if [ -n "${BASH_SOURCE:-}" ]; then
+    _obsidian_self="${BASH_SOURCE[0]}"
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    _obsidian_self="${(%):-%N}"
+fi
+if [ -n "${_obsidian_self:-}" ]; then
+    OBSIDIAN_SYNC_DIR="$(cd "$(dirname "$_obsidian_self")" && pwd)"
+fi
+unset _obsidian_self
+
 _obsidian_help() {
     cat <<'EOF'
 Usage: obsidian <command>
@@ -69,16 +83,16 @@ Commands:
   help    Show this message
 
 Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault
-Optional: export OBSIDIAN_SYNC_PATH=/path/to/obsidian-vault-sync
-          (defaults to ~/.obsidian-vault-sync, used by 'obsidian update')
+'obsidian update' auto-detects where obsidian-vault-sync is cloned; set
+OBSIDIAN_SYNC_PATH only if that detection fails for your setup.
 EOF
 }
 
 _obsidian_update() {
-    local sync_dir="${OBSIDIAN_SYNC_PATH:-$HOME/.obsidian-vault-sync}"
+    local sync_dir="${OBSIDIAN_SYNC_PATH:-${OBSIDIAN_SYNC_DIR:-$HOME/.obsidian-vault-sync}}"
 
     if [ ! -d "$sync_dir/.git" ]; then
-        echo "obsidian: '$sync_dir' is not a git repository. Set OBSIDIAN_SYNC_PATH if you cloned obsidian-vault-sync somewhere else." >&2
+        echo "obsidian: '$sync_dir' is not a git repository. Set OBSIDIAN_SYNC_PATH to where you cloned obsidian-vault-sync." >&2
         return 1
     fi
 
