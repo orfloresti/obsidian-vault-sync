@@ -18,6 +18,9 @@ terminal, sin necesidad de navegar a la carpeta del vault.
   define `VSYNC_PATH` si esa detección fallara en tu caso. Después de
   actualizar, abre una terminal nueva (o vuelve a sourcear `vsync.sh`) para
   que tome el cambio.
+- `vsync version` — imprime solo el hash corto del último commit de
+  `obsidian-vault-sync` (misma detección de ruta que `update`). Sirve para
+  comparar entre dispositivos y confirmar que todos corren la misma versión.
 - `vsync help` (o `-h` / `--help`) — muestra la ayuda de uso.
 
 Si `vsync push` (o `vsync pull`) encuentra un conflicto al hacer pull, se

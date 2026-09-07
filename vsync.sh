@@ -15,6 +15,7 @@
 #                       uncommitted local changes first and reapplies them after)
 #   vsync push       - add + commit (auto-generated message) + pull + push
 #   vsync update     - update this tool itself (pulls obsidian-vault-sync)
+#   vsync version    - print the commit hash of this tool (to compare devices)
 #   vsync help       - show this usage message
 
 vsync() {
@@ -25,6 +26,10 @@ vsync() {
             ;;
         update)
             _vsync_update
+            return $?
+            ;;
+        version)
+            _vsync_version
             return $?
             ;;
     esac
@@ -75,26 +80,36 @@ _vsync_help() {
 Usage: vsync [command]
 
 Commands:
-  (none)  Pull, then push, in a single command — the common case
-  pull    Pull the latest changes from the remote (stashes any uncommitted
-          local changes first and reapplies them after)
-  push    Add + commit (auto-generated message) + pull + push
-  update  Update this tool itself (pulls obsidian-vault-sync)
-  help    Show this message
+  (none)   Pull, then push, in a single command — the common case
+  pull     Pull the latest changes from the remote (stashes any uncommitted
+           local changes first and reapplies them after)
+  push     Add + commit (auto-generated message) + pull + push
+  update   Update this tool itself (pulls obsidian-vault-sync)
+  version  Print the commit hash of this tool (to compare devices)
+  help     Show this message
 
 Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault
-'vsync update' auto-detects where obsidian-vault-sync is cloned; set
-VSYNC_PATH only if that detection fails for your setup.
+'vsync update'/'vsync version' auto-detect where obsidian-vault-sync is
+cloned; set VSYNC_PATH only if that detection fails for your setup.
 EOF
 }
 
-_vsync_update() {
-    local sync_dir="${VSYNC_PATH:-${VSYNC_DIR:-$HOME/.obsidian-vault-sync}}"
+# Resolves and validates the obsidian-vault-sync repo location, shared by
+# `vsync update` and `vsync version`. Prints the path on success.
+_vsync_sync_dir() {
+    local dir="${VSYNC_PATH:-${VSYNC_DIR:-$HOME/.obsidian-vault-sync}}"
 
-    if [ ! -d "$sync_dir/.git" ]; then
-        echo "vsync: '$sync_dir' is not a git repository. Set VSYNC_PATH to where you cloned obsidian-vault-sync." >&2
+    if [ ! -d "$dir/.git" ]; then
+        echo "vsync: '$dir' is not a git repository. Set VSYNC_PATH to where you cloned obsidian-vault-sync." >&2
         return 1
     fi
+
+    printf '%s\n' "$dir"
+}
+
+_vsync_update() {
+    local sync_dir
+    sync_dir=$(_vsync_sync_dir) || return 1
 
     echo "vsync: updating obsidian-vault-sync..."
     if ! git -C "$sync_dir" pull --no-edit --no-rebase; then
@@ -103,6 +118,13 @@ _vsync_update() {
     fi
 
     echo "vsync: done. Open a new terminal (or re-source vsync.sh) to load the update."
+}
+
+_vsync_version() {
+    local sync_dir
+    sync_dir=$(_vsync_sync_dir) || return 1
+
+    git -C "$sync_dir" rev-parse --short HEAD
 }
 
 # Explicit --no-rebase so this doesn't depend on the device's git config
