@@ -15,9 +15,8 @@ terminal, sin necesidad de navegar a la carpeta del vault.
 - `vsync update` — actualiza esta herramienta (hace `pull` del propio repo
   `obsidian-vault-sync`). Detecta sola desde dónde sourceaste `vsync.sh`, sin
   importar dónde lo hayas clonado — no necesitas configurar nada. Solo
-  define `VSYNC_PATH` si esa detección fallara en tu caso. Después de
-  actualizar, abre una terminal nueva (o vuelve a sourcear `vsync.sh`) para
-  que tome el cambio.
+  define `VSYNC_PATH` si esa detección fallara en tu caso. Se recarga sola
+  al terminar — no necesitas abrir una terminal nueva.
 - `vsync version` — imprime solo el hash corto del último commit de
   `obsidian-vault-sync` (misma detección de ruta que `update`). Sirve para
   comparar entre dispositivos y confirmar que todos corren la misma versión.
