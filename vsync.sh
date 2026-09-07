@@ -117,7 +117,12 @@ _vsync_update() {
         return 1
     fi
 
-    echo "vsync: done. Open a new terminal (or re-source vsync.sh) to load the update."
+    if [ -f "$sync_dir/vsync.sh" ]; then
+        source "$sync_dir/vsync.sh"
+        echo "vsync: done and reloaded."
+    else
+        echo "vsync: done, but couldn't find $sync_dir/vsync.sh to reload automatically. Open a new terminal to pick up the update." >&2
+    fi
 }
 
 _vsync_version() {
