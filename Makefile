@@ -1,10 +1,13 @@
-.PHONY: install uninstall test
+.PHONY: install uninstall test check
 
-install:
+check:
+	@bash scripts/check.sh
+
+install: check
 	@bash scripts/install.sh
 
 uninstall:
 	@bash scripts/uninstall.sh
 
-test:
+test: check
 	@bash tests/test_vsync.sh

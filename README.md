@@ -3,6 +3,22 @@
 `vsync` command to sync an Obsidian vault via git from any terminal, without
 having to cd into the vault folder.
 
+## Why
+
+Obsidian's community Git plugin works, but on Android it's harder to reason
+about: it auto-commits and auto-pushes on a timer in the background, so a
+sync can happen mid-edit, or race with a sync from another device, and when
+something goes wrong it's not always obvious what state you're actually in.
+
+`vsync` makes the opposite tradeoff: nothing runs automatically in the
+background. You run one command, when you decide to sync, and every step it
+takes — `git status`, `stash`, `pull`, `pop`, `add`, `commit`, `push` — is a
+plain git operation you can inspect yourself, with no plugin-specific state
+to debug. It's also just bash + git, so it behaves the same on a desktop, in
+Termux on Android, or anywhere else you might edit the vault, instead of
+depending on a mobile runtime with fewer guarantees (see
+`isomorphic-git` vs. system git in the vault's own notes on this).
+
 ## Commands
 
 - `vsync` (no arguments) — runs `pull` and then `push` in a single command.
@@ -38,10 +54,20 @@ device in the meantime.
    git clone https://github.com/orfloresti/obsidian-vault-sync.git ~/.obsidian-vault-sync
    ```
 
-2. Run the installer:
+2. (Optional) Check that this device has what `vsync` needs — `git`, `bash`,
+   `sed`, `grep`:
 
    ```bash
    cd ~/.obsidian-vault-sync
+   make check
+   ```
+
+   `make install` runs this automatically and stops if something's missing,
+   so this step is only useful to check a device on its own.
+
+3. Run the installer:
+
+   ```bash
    make install
    ```
 
@@ -57,7 +83,7 @@ device in the meantime.
    available is the `source` line, not `PATH` (that's added in case you add
    other standalone scripts to this repo later).
 
-3. Open a new terminal (or run `source ~/.bashrc`) and try it:
+4. Open a new terminal (or run `source ~/.bashrc`) and try it:
 
    ```bash
    vsync
