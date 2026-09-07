@@ -5,18 +5,26 @@
 #
 # Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault  (before sourcing this file)
 #
+# Optional: export OBSIDIAN_SYNC_PATH=/path/to/obsidian-vault-sync
+#           (defaults to ~/.obsidian-vault-sync, used by `obsidian update`)
+#
 # Usage:
-#   obsidian pull   - pull the latest changes from the remote (stashes any
-#                      uncommitted local changes first and reapplies them after)
-#   obsidian push   - add + commit (auto-generated message) + pull + push
-#   obsidian sync   - pull, then push, in a single command
-#   obsidian help   - show this usage message
+#   obsidian pull    - pull the latest changes from the remote (stashes any
+#                       uncommitted local changes first and reapplies them after)
+#   obsidian push    - add + commit (auto-generated message) + pull + push
+#   obsidian sync    - pull, then push, in a single command
+#   obsidian update  - update this tool itself (pulls obsidian-vault-sync)
+#   obsidian help    - show this usage message
 
 obsidian() {
     case "$1" in
         help | -h | --help)
             _obsidian_help
             return 0
+            ;;
+        update)
+            _obsidian_update
+            return $?
             ;;
     esac
 
@@ -53,14 +61,34 @@ _obsidian_help() {
 Usage: obsidian <command>
 
 Commands:
-  pull   Pull the latest changes from the remote (stashes any uncommitted
-         local changes first and reapplies them after)
-  push   Add + commit (auto-generated message) + pull + push
-  sync   Pull, then push, in a single command
-  help   Show this message
+  pull    Pull the latest changes from the remote (stashes any uncommitted
+          local changes first and reapplies them after)
+  push    Add + commit (auto-generated message) + pull + push
+  sync    Pull, then push, in a single command
+  update  Update this tool itself (pulls obsidian-vault-sync)
+  help    Show this message
 
 Requires: export OBSIDIAN_VAULT_PATH=/path/to/your/vault
+Optional: export OBSIDIAN_SYNC_PATH=/path/to/obsidian-vault-sync
+          (defaults to ~/.obsidian-vault-sync, used by 'obsidian update')
 EOF
+}
+
+_obsidian_update() {
+    local sync_dir="${OBSIDIAN_SYNC_PATH:-$HOME/.obsidian-vault-sync}"
+
+    if [ ! -d "$sync_dir/.git" ]; then
+        echo "obsidian: '$sync_dir' is not a git repository. Set OBSIDIAN_SYNC_PATH if you cloned obsidian-vault-sync somewhere else." >&2
+        return 1
+    fi
+
+    echo "obsidian: updating obsidian-vault-sync..."
+    if ! git -C "$sync_dir" pull --no-edit --no-rebase; then
+        echo "obsidian: conflict while updating. Resolve it manually in $sync_dir." >&2
+        return 1
+    fi
+
+    echo "obsidian: done. Open a new terminal (or re-source obsidian.sh) to load the update."
 }
 
 # Explicit --no-rebase so this doesn't depend on the device's git config
