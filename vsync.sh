@@ -19,7 +19,7 @@
 #   vsync help       - show this usage message
 
 vsync() {
-    case "$1" in
+    case "${1:-}" in
         help | -h | --help)
             _vsync_help
             return 0
@@ -32,9 +32,16 @@ vsync() {
             _vsync_version
             return $?
             ;;
+        "" | pull | push)
+            : # valid, handled below once OBSIDIAN_VAULT_PATH is checked
+            ;;
+        *)
+            _vsync_help >&2
+            return 1
+            ;;
     esac
 
-    if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
+    if [ -z "${OBSIDIAN_VAULT_PATH:-}" ]; then
         echo "vsync: OBSIDIAN_VAULT_PATH is not set. Add 'export OBSIDIAN_VAULT_PATH=/path/to/your/vault' to your .bashrc/.zshrc" >&2
         return 1
     fi
@@ -44,7 +51,7 @@ vsync() {
         return 1
     fi
 
-    case "$1" in
+    case "${1:-}" in
         "")
             _vsync_pull || return 1
             _vsync_push
@@ -54,10 +61,6 @@ vsync() {
             ;;
         push)
             _vsync_push
-            ;;
-        *)
-            _vsync_help >&2
-            return 1
             ;;
     esac
 }
@@ -134,14 +137,16 @@ _vsync_version() {
 
 # Explicit --no-rebase so this doesn't depend on the device's git config
 # (some git setups demand "reconcile divergent branches" if pull.rebase/
-# pull.ff aren't configured). Any uncommitted local changes are stashed
-# before pulling and reapplied after, so a pull never gets blocked or
-# silently loses work.
+# pull.ff aren't configured). Any uncommitted local changes — including new,
+# untracked files (e.g. a note you just created) — are stashed before
+# pulling and reapplied after, so a pull never gets blocked or silently
+# loses work. `git status --porcelain` is used instead of `git diff
+# --quiet`/`--cached` because those two miss untracked files entirely.
 _vsync_pull() {
     local vault="$OBSIDIAN_VAULT_PATH"
     local stashed=0
 
-    if ! git -C "$vault" diff --quiet || ! git -C "$vault" diff --cached --quiet; then
+    if [ -n "$(git -C "$vault" status --porcelain)" ]; then
         echo "vsync: stashing uncommitted local changes before pulling..."
         git -C "$vault" stash push -u -m "vsync pull: uncommitted changes" || return 1
         stashed=1

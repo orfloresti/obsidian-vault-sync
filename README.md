@@ -39,12 +39,28 @@ en otro dispositivo mientras tanto.
    git clone https://github.com/orfloresti/obsidian-vault-sync.git ~/.obsidian-vault-sync
    ```
 
-2. Agrega estas dos líneas a tu `.bashrc` (o `.zshrc`), ajustando la ruta
-   donde tengas clonado tu vault en ese dispositivo:
+2. Corre el instalador:
+
+   ```bash
+   cd ~/.obsidian-vault-sync
+   make install
+   ```
+
+   Te va a preguntar la ruta del repo (default: el directorio actual) y qué
+   archivo de shell actualizar (`~/.bashrc` por default, o `~/.zshrc` si tu
+   shell es zsh). Agrega un bloque delimitado por marcadores a ese archivo:
+   la ruta del repo a `PATH` y el `source` de `vsync.sh`. Correrlo de nuevo
+   reemplaza el bloque en vez de duplicarlo.
+
+   `vsync` es una función de shell, no un binario — lo que realmente lo hace
+   disponible es la línea de `source`, no el `PATH` (ese se agrega por si
+   más adelante agregas otros scripts sueltos a este repo).
+
+   `make install` **no** configura `OBSIDIAN_VAULT_PATH` — agrégalo tú a mano
+   en el mismo archivo, apuntando a tu vault en ese dispositivo:
 
    ```bash
    export OBSIDIAN_VAULT_PATH="$HOME/obsidian-vault"
-   source "$HOME/.obsidian-vault-sync/vsync.sh"
    ```
 
 3. Abre una terminal nueva (o corre `source ~/.bashrc`) y prueba:
@@ -56,3 +72,23 @@ en otro dispositivo mientras tanto.
 Cada dispositivo (PC, Termux, tablet) solo necesita apuntar
 `OBSIDIAN_VAULT_PATH` a su propio clon de `obsidian-vault` — el script
 (`vsync.sh`) es el mismo en todos.
+
+Para quitarlo de un dispositivo:
+```bash
+make uninstall
+```
+Busca el bloque en `~/.bashrc` y `~/.zshrc` y lo quita de donde lo encuentre
+(guarda una copia `.bak` antes). No borra el repo clonado ni tu vault.
+
+## Tests
+
+```bash
+make test
+```
+Corre `tests/test_vsync.sh`: crea repos git temporales (aislados, se borran
+solos al terminar) para probar cada comando de punta a punta — ayuda,
+argumentos inválidos, `push`/`pull`/sync sin cambios, con cambios, con
+archivos nuevos sin trackear, con ramas divergentes entre "dos
+dispositivos", con un conflicto real de merge, y `update`/`version` con
+detección automática de ruta. No toca tu vault real ni tu configuración de
+shell.
